@@ -58,7 +58,6 @@ func main() {
 	log.Printf("Input:\n- SWATH File: %s\n- FDR File: %s\n- Output File: %s ", openSWATHfile, openFDRfile, filename)
 
 	swathFile := fileHandler.ReadFile(openSWATHfile, 1)
-	log.Println(swathFile.Header, len(swathFile.Header))
 	samples := len(swathFile.Header) - 9
 	log.Printf("%d Samples", samples)
 	fdrFile := fileHandler.ReadFile(openFDRfile, 1)
@@ -110,4 +109,5 @@ func main() {
 	}
 	writer.Flush()
 	o.Close()
+	log.Println("Completed.")
 }
