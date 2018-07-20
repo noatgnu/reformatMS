@@ -4,6 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+		"path/filepath"
+	"strings"
 )
 
 func Input(message string) (filename string, err error) {
@@ -16,4 +18,8 @@ func Input(message string) (filename string, err error) {
 		return "", err
 	}
 	return filename, nil
+}
+
+func Clean(message string) string {
+	return filepath.FromSlash(strings.Replace(message, `"`, "", -1))
 }

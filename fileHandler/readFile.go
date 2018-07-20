@@ -22,7 +22,7 @@ func ReadFile(filename string, headerRowNumber int) (fileO FileObject) {
 		log.Fatalln(err)
 	}
 	reader := csv.NewReader(f)
-	reader.Comma = '\t'
+	reader.Comma = ','
 	reader.LazyQuotes = true
 	fileO.OutputChan = make(chan []string)
 	if headerRowNumber > 1 {
