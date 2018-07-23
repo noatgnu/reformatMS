@@ -2,17 +2,19 @@ package main
 
 import (
 	"encoding/csv"
-	"log"
-	"os"
+	"flag"
 	"github.com/noatgnu/reformatMS/fileHandler"
 	"github.com/noatgnu/reformatMS/input"
+	"log"
+	"os"
 	"strconv"
-		"strings"
-	"flag"
+	"strings"
 )
+
 var swath = flag.String("swath", "", "SWATH File")
 var fdr = flag.String("fdr", "", "FDR File")
 var out = flag.String("out", "", "Output File")
+
 func init() {
 	flag.Parse()
 }
@@ -28,32 +30,11 @@ func main() {
 
 	var openSWATHfile, openFDRfile, filename string
 	var err error
-	if *swath == "" {
-		openSWATHfile, err = input.Input("What SWATH-MS file are you opening (written like: SWATH.csv): ")
-		if err != nil {
-			log.Fatalln(err)
-		}
-	} else {
-		openSWATHfile = *swath
-	}
+	openSWATHfile, err = userInput(openSWATHfile, *swath, err)
 	openSWATHfile = input.Clean(openSWATHfile)
-	if *fdr == "" {
-		openFDRfile, err = input.Input("What FDR file are you opening (written like: FDR.csv): ")
-		if err != nil {
-			log.Fatalln(err)
-		}
-	} else {
-		openFDRfile = *fdr
-	}
+	openFDRfile, err = userInput(openFDRfile, *fdr, err)
 	openFDRfile = input.Clean(openFDRfile)
-	if *out == "" {
-		filename, err = input.Input("What would you like to name the output file (written like: MSstats.csv): ")
-		if err != nil {
-			log.Fatalln(err)
-		}
-	} else {
-		filename = *out
-	}
+	filename, err = userInput(filename, *out, err)
 	filename = input.Clean(filename)
 	log.Printf("Input:\n- SWATH File: %s\n- FDR File: %s\n- Output File: %s ", openSWATHfile, openFDRfile, filename)
 
@@ -110,4 +91,16 @@ func main() {
 	writer.Flush()
 	o.Close()
 	log.Println("Completed.")
+}
+
+func userInput(openSWATHfile string, arg string, err error) (string, error) {
+	if arg == "" {
+		openSWATHfile, err = input.Input("What SWATH-MS file are you opening (written like: SWATH.csv): ")
+		if err != nil {
+			log.Fatalln(err)
+		}
+	} else {
+		openSWATHfile = arg
+	}
+	return openSWATHfile, err
 }

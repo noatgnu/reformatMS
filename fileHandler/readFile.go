@@ -14,7 +14,7 @@ type FileObject struct {
 }
 
 func ReadFile(filename string, headerRowNumber int) (fileO FileObject) {
-	if headerRowNumber <1 {
+	if headerRowNumber < 1 {
 		log.Fatalln("Header Row Number has to be >= 1")
 	}
 	f, err := os.Open(filename)
@@ -36,7 +36,7 @@ func ReadFile(filename string, headerRowNumber int) (fileO FileObject) {
 		}
 		combinedHeader := make([]string, len(headerRows[0]))
 		for i := 0; i < len(combinedHeader); i++ {
-			for i2 := 0; i2 <len(headerRows); i2 ++ {
+			for i2 := 0; i2 < len(headerRows); i2++ {
 				combinedHeader[i] += headerRows[i2][i]
 			}
 		}
