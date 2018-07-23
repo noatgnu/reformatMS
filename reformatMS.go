@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/csv"
 	"flag"
 	"github.com/noatgnu/reformatMS/fileHandler"
 	"github.com/noatgnu/reformatMS/input"
@@ -9,7 +8,14 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"bufio"
+	"fmt"
 )
+
+type TempOutPut struct{
+	TempResult []string
+	EmptyCount int
+}
 
 var swath = flag.String("ion", "", "SWATH Ion File")
 var fdr = flag.String("fdr", "", "FDR File")
@@ -68,12 +74,13 @@ func main() {
 	if err != nil {
 		log.Fatalln(err)
 	}
-	writer := csv.NewWriter(o)
-	writer.Comma = ','
-	writer.Write([]string{"ProteinName", "PeptideSequence", "PrecursorCharge", "FragmentIon", "ProductCharge", "IsotopeLabelType", "Condition", "BioReplicate", "Run", "Intensity"})
+	writer := bufio.NewWriter(o)
+	writer.WriteString("ProteinName,PeptideSequence,PrecursorCharge,FragmentIon,ProductCharge,IsotopeLabelType,Condition,BioReplicate,Run,Intensity\n")
 	//log.Println(fdrMap)
 	swathSampleMap := make(map[string][]string)
 	for c := range swathFile.OutputChan {
+		count := 0
+		temp := ""
 		if val, ok := fdrMap[c[1]]; ok {
 			for i := 0; i < samples; i++ {
 				//log.Println(swathFile.Header[9+i])
@@ -85,17 +92,30 @@ func main() {
 					swathSampleMap[swathFile.Header[9+i]] = sample[:]
 				}
 
-				row := []string{c[0], c[1], c[3], c[7] + c[8], c[6], "L",
+				row := fmt.Sprintf("%v,%v,%v,%v,%v,%v,%v,%v,%v,", c[0], c[1], c[3], c[7] + c[8], c[6], "L",
 					sample[0],
 					swathFile.Header[9+i],
-					strconv.Itoa(i + 1), ""}
+					strconv.Itoa(i + 1))
 				if val[i] < 0.01 {
-					row[9] = c[9+i]
+					row += c[9+i]
+					if c[9+i] == "" {
+						count += 1
+					}
+				} else {
+					row += ""
+					count += 1
 				}
-				writer.Write(row)
+				row += "\n"
+				temp += row
+
+			}
+			if count < samples {
+				writer.WriteString(temp)
 			}
 		}
+
 	}
+
 	writer.Flush()
 	o.Close()
 	log.Println("Completed.")
