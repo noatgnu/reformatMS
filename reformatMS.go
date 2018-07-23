@@ -30,11 +30,11 @@ func main() {
 
 	var openSWATHfile, openFDRfile, filename string
 	var err error
-	openSWATHfile, err = userInput(openSWATHfile, *swath, err)
+	openSWATHfile, err = userInput(openSWATHfile, *swath, "What SWATH-MS file are you opening (written like: SWATH.csv): ", err)
 	openSWATHfile = input.Clean(openSWATHfile)
-	openFDRfile, err = userInput(openFDRfile, *fdr, err)
+	openFDRfile, err = userInput(openFDRfile, *fdr, "What FDR file are you opening (written like: FDR.csv): ", err)
 	openFDRfile = input.Clean(openFDRfile)
-	filename, err = userInput(filename, *out, err)
+	filename, err = userInput(filename, *out, "What are your output file (written like: output.csv): ", err)
 	filename = input.Clean(filename)
 	log.Printf("Input:\n- SWATH File: %s\n- FDR File: %s\n- Output File: %s ", openSWATHfile, openFDRfile, filename)
 
@@ -72,13 +72,21 @@ func main() {
 	writer.Comma = ','
 	writer.Write([]string{"ProteinName", "PeptideSequence", "PrecursorCharge", "FragmentIon", "ProductCharge", "IsotopeLabelType", "Condition", "BioReplicate", "Run", "Intensity"})
 	//log.Println(fdrMap)
+	swathSampleMap := make(map[string][]string)
 	for c := range swathFile.OutputChan {
 		if val, ok := fdrMap[c[1]]; ok {
 			for i := 0; i < samples; i++ {
 				//log.Println(swathFile.Header[9+i])
-				n := strings.Split(swathFile.Header[9+i], "_")
+				var sample []string
+				if val, ok := swathSampleMap[swathFile.Header[9+i]]; ok {
+					sample = val
+				} else {
+					sample = strings.Split(swathFile.Header[9+i], "_")
+					swathSampleMap[swathFile.Header[9+i]] = sample[:]
+				}
+				
 				row := []string{c[0], c[1], c[3], c[7] + c[8], c[6], "L",
-					n[0],
+					sample[0],
 					swathFile.Header[9+i],
 					strconv.Itoa(i + 1), ""}
 				if val[i] < 0.01 {
@@ -93,9 +101,9 @@ func main() {
 	log.Println("Completed.")
 }
 
-func userInput(openSWATHfile string, arg string, err error) (string, error) {
+func userInput(openSWATHfile string, arg string, message string, err error) (string, error) {
 	if arg == "" {
-		openSWATHfile, err = input.Input("What SWATH-MS file are you opening (written like: SWATH.csv): ")
+		openSWATHfile, err = input.Input(message)
 		if err != nil {
 			log.Fatalln(err)
 		}
