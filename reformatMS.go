@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-var swath = flag.String("swath", "", "SWATH File")
+var swath = flag.String("ion", "", "SWATH Ion File")
 var fdr = flag.String("fdr", "", "FDR File")
 var out = flag.String("out", "", "Output File")
 
@@ -84,7 +84,7 @@ func main() {
 					sample = strings.Split(swathFile.Header[9+i], "_")
 					swathSampleMap[swathFile.Header[9+i]] = sample[:]
 				}
-				
+
 				row := []string{c[0], c[1], c[3], c[7] + c[8], c[6], "L",
 					sample[0],
 					swathFile.Header[9+i],
