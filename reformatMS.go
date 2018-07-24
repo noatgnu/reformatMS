@@ -12,14 +12,11 @@ import (
 	"fmt"
 )
 
-type TempOutPut struct{
-	TempResult []string
-	EmptyCount int
-}
 
-var swath = flag.String("ion", "", "SWATH Ion File")
-var fdr = flag.String("fdr", "", "FDR File")
-var out = flag.String("out", "", "Output File")
+var swath = flag.String("ion", "", "SWATH Ion CSV File")
+var fdr = flag.String("fdr", "", "FDR CSV File")
+var out = flag.String("out", "", "Output CSV File")
+var threshold = flag.Float64("threshold", 0.01, "FDR Filtering Threshold")
 
 func init() {
 	flag.Parse()
@@ -28,7 +25,6 @@ func init() {
 func main() {
 	log.Println("RULES:\n " +
 		"Sample number must be even (treatment and control.\n" +
-		"Filenames must be entered within ' ' and must end in csv.\n" +
 		"The SWATH-MS file copied from the PeakView .xslx output file must be saved as .csv - only the ion sheet.\n" +
 		"Biological Replicates should be the name in the intensity column (name of sample) along with _1 if it's the first bioreplicate.\n" +
 		"Control should be just the name of the sample, like bio replicate but with the _1.\n" +
@@ -96,7 +92,7 @@ func main() {
 					sample[0],
 					swathFile.Header[9+i],
 					strconv.Itoa(i + 1))
-				if val[i] < 0.01 {
+				if val[i] < *threshold {
 					row += c[9+i]
 					if c[9+i] == "" {
 						count += 1
