@@ -26,9 +26,9 @@ func init() {
 }
 
 func main() {
-	log.Println("RULES:\n " +
-		"Sample number must be even (treatment and control.\n" +
-		"Filenames must be entered within ' ' and must end in csv.\n" +
+	log.Println("RULES:\n" +
+		"File must be in csv format.\n" +
+		"Filenames with space must be entered within ' '.\n" +
 		"The SWATH-MS file copied from the PeakView .xslx output file must be saved as .csv - only the ion sheet.\n" +
 		"Biological Replicates should be the name in the intensity column (name of sample) along with _1 if it's the first bioreplicate.\n" +
 		"Control should be just the name of the sample, like bio replicate but with the _1.\n" +
@@ -50,6 +50,7 @@ func main() {
 	fdrFile := fileHandler.ReadFile(openFDRfile, 1)
 
 	fdrMap := make(map[string][]float64)
+	log.Println("Mapping FDR to accession ID.")
 	for c := range fdrFile.OutputChan {
 		fdrFail := 0
 		var fdrArray []float64
@@ -78,6 +79,7 @@ func main() {
 	writer.WriteString("ProteinName,PeptideSequence,PrecursorCharge,FragmentIon,ProductCharge,IsotopeLabelType,Condition,BioReplicate,Run,Intensity\n")
 	//log.Println(fdrMap)
 	swathSampleMap := make(map[string][]string)
+	log.Println("Processing ions using FDR mapped accession IDs.")
 	for c := range swathFile.OutputChan {
 		count := 0
 		temp := ""
