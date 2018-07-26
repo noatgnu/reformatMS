@@ -99,7 +99,7 @@ func main() {
 					sample[0],
 					swathFile.Header[9+i],
 					strconv.Itoa(i + 1))
-				if val[i] < 0.01 {
+				if val[i] < *threshold {
 					row += c[9+i]
 					if c[9+i] == "" {
 						count += 1
