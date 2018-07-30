@@ -1,5 +1,13 @@
 reformatMS
 ---
+
+Description:
+
+Uses output from PeakView (an “ions.csv” file and an “FDR.csv” file as a quality filter) and reformats as .csv file appropriate for use in MSstats. 
+
+Appropriate for use with PeakView 2.1 and MSstats 2.4 and above.
+
+
 Download:
 
 https://github.com/noatgnu/reformatMS/releases
@@ -30,3 +38,5 @@ Overall input files rules:
 - Sample name is by the follow format `{1}_{2}` where `{1}` is the sample title and `{2}` is the sample number.
 - Sample columns have to be placed at column number 10 and beyond.
 - There must be no blank column within the input files.
+- Sample in Ion file input must also be in FDR file.
+- Sample column order in Ion file and FDR file must be the same.

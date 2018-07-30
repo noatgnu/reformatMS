@@ -61,7 +61,7 @@ func TakeUserInput() (string, string, string) {
 	return openSWATHfile, openFDRfile, filename
 }
 
-func ProcessIons(filename string, swathFile fileHandler.FileObject, fdrMap map[string][]float64, samples int) {
+func ProcessIons(filename string, swathFile fileHandler.FileObject, fdrMap map[string]map[string][]float64, samples int) {
 	o, err := os.Create(filename)
 	if err != nil {
 		log.Fatalln(err)
@@ -74,48 +74,55 @@ func ProcessIons(filename string, swathFile fileHandler.FileObject, fdrMap map[s
 	for c := range swathFile.OutputChan {
 		count := 0
 		temp := ""
-		if val, ok := fdrMap[c[1]]; ok {
-			for i := 0; i < samples; i++ {
-				//log.Println(swathFile.Header[9+i])
-				var sample []string
-				if val, ok := swathSampleMap[swathFile.Header[9+i]]; ok {
-					sample = val
-				} else {
-					sample = strings.Split(swathFile.Header[9+i], "_")
-					swathSampleMap[swathFile.Header[9+i]] = sample[:]
-				}
+		if v, ok := fdrMap[c[0]]; ok {
+			if val, ok := v[c[1]]; ok {
+				for i := 0; i < samples; i++ {
+					//log.Println(swathFile.Header[9+i])
+					var sample []string
+					if val, ok := swathSampleMap[swathFile.Header[9+i]]; ok {
+						sample = val
+					} else {
+						sample = strings.Split(swathFile.Header[9+i], "_")
+						swathSampleMap[swathFile.Header[9+i]] = sample[:]
+					}
 
-				row := fmt.Sprintf("%v,%v,%v,%v,%v,%v,%v,%v,%v,", c[0], c[1], c[3], c[7]+c[8], c[6], "L",
-					sample[0],
-					swathFile.Header[9+i],
-					strconv.Itoa(i+1))
-				if val[i] < *threshold {
-					row += c[9+i]
-					if c[9+i] == "" {
+					row := fmt.Sprintf("%v,%v,%v,%v,%v,%v,%v,%v,%v,", c[0], c[1], c[3], c[7]+c[8], c[6], "L",
+						sample[0],
+						swathFile.Header[9+i],
+						strconv.Itoa(i+1))
+					if val[i] < *threshold {
+						row += c[9+i]
+						if c[9+i] == "" {
+							count += 1
+						}
+					} else {
+						row += ""
 						count += 1
 					}
-				} else {
-					row += ""
-					count += 1
-				}
-				row += "\n"
-				temp += row
+					row += "\n"
+					temp += row
 
-			}
-			if count < samples {
-				writer.WriteString(temp)
+				}
+				if count < samples {
+					writer.WriteString(temp)
+				}
 			}
 		}
+
 	}
 	writer.Flush()
 	o.Close()
 }
 
-func ExtractFDRMap(fdrFile fileHandler.FileObject, samples int) map[string][]float64 {
-	fdrMap := make(map[string][]float64)
+func ExtractFDRMap(fdrFile fileHandler.FileObject, samples int) map[string]map[string][]float64 {
+	fdrMap := make(map[string]map[string][]float64)
 	log.Println("Mapping FDR to accession ID.")
 	for c := range fdrFile.OutputChan {
 		fdrFail := 0
+		if _, ok := fdrMap[c[0]]; !ok {
+			fdrMap[c[0]] = make(map[string][]float64)
+		}
+
 		var fdrArray []float64
 		for i := 0; i < samples; i++ {
 			val, err := strconv.ParseFloat(c[7+i], 64)
@@ -130,7 +137,7 @@ func ExtractFDRMap(fdrFile fileHandler.FileObject, samples int) map[string][]flo
 		}
 		if fdrFail < samples {
 
-			fdrMap[c[1]] = fdrArray
+			fdrMap[c[0]][c[1]] = fdrArray
 		}
 	}
 	return fdrMap
