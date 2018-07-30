@@ -18,7 +18,10 @@ Parameter|Function
 -out|Output file location in csv format
 -t|FDR cutoff threshold (default 0.01)
 
-Example: `.\reformatMS.exe -ion=Ions.csv -fdr=FDR.csv -out=Out.csv -t=0.01`
+Example: 
+
+`With the script in the same location as inputs file
+.\reformatMS.exe -ion=Ions.csv -fdr=FDR.csv -out=Out.csv -t=0.01`
 
 The user will be prompted to enter each missing parameter besides `-h` and `-t`.
 
