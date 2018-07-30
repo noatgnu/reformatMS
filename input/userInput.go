@@ -21,5 +21,5 @@ func Input(message string) (filename string, err error) {
 }
 
 func Clean(message string) string {
-	return filepath.FromSlash(strings.Replace(message, `"`, "", -1))
+	return strings.TrimSuffix(filepath.FromSlash(strings.Replace(message, `"`, "", -1)), " ")
 }
