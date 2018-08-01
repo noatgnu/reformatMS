@@ -27,14 +27,6 @@ func init() {
 }
 
 func main() {
-	log.Println("RULES:\n" +
-		"File must be in csv format.\n" +
-		"Filenames with space must be entered within ' '.\n" +
-		"The SWATH-MS file copied from the PeakView .xslx output file must be saved as .csv - only the ion sheet.\n" +
-		"Biological Replicates should be the name in the intensity column (name of sample) along with _1 if it's the first bioreplicate.\n" +
-		"Control should be just the name of the sample, like bio replicate but with the _1.\n" +
-		"The FDR file copied from the PeakView .xslx output file must be saved as .csv - only the FDR sheet.")
-
 	openSWATHfile, openFDRfile, filename := TakeUserInput()
 
 	swathFile := fileHandler.ReadFile(openSWATHfile, 1)
