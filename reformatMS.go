@@ -12,11 +12,6 @@ import (
 	"fmt"
 )
 
-type TempOutPut struct{
-	TempResult []string
-	EmptyCount int
-}
-
 var swath = flag.String("ion", "", "SWATH Ion File")
 var fdr = flag.String("fdr", "", "FDR File")
 var out = flag.String("out", "", "Output File")
@@ -36,7 +31,21 @@ func main() {
 
 	fdrMap := ExtractFDRMap(fdrFile, samples)
 
-	ProcessIons(filename, swathFile, fdrMap, samples)
+	o, err := os.Create(filename)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	writer := bufio.NewWriter(o)
+	writer.WriteString("ProteinName,PeptideSequence,PrecursorCharge,FragmentIon,ProductCharge,IsotopeLabelType,Condition,BioReplicate,Run,Intensity\n")
+	outputChan := make(chan string)
+	go ProcessIons(outputChan, swathFile, fdrMap, samples)
+	for r := range outputChan {
+		writer.WriteString(r)
+	}
+	writer.Flush()
+	o.Close()
+
 	log.Println("Completed.")
 }
 
@@ -53,13 +62,8 @@ func TakeUserInput() (string, string, string) {
 	return openSWATHfile, openFDRfile, filename
 }
 
-func ProcessIons(filename string, swathFile fileHandler.FileObject, fdrMap map[string]map[string][]float64, samples int) {
-	o, err := os.Create(filename)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	writer := bufio.NewWriter(o)
-	writer.WriteString("ProteinName,PeptideSequence,PrecursorCharge,FragmentIon,ProductCharge,IsotopeLabelType,Condition,BioReplicate,Run,Intensity\n")
+func ProcessIons(outputChan chan string, swathFile fileHandler.FileObject, fdrMap map[string]map[string][]float64, samples int) {
+
 	//log.Println(fdrMap)
 	swathSampleMap := make(map[string][]string)
 	log.Println("Processing ions using FDR mapped accession IDs.")
@@ -96,14 +100,14 @@ func ProcessIons(filename string, swathFile fileHandler.FileObject, fdrMap map[s
 
 				}
 				if count < samples {
-					writer.WriteString(temp)
+					outputChan <- temp
+
 				}
 			}
 		}
 
 	}
-	writer.Flush()
-	o.Close()
+	close(outputChan)
 }
 
 func ExtractFDRMap(fdrFile fileHandler.FileObject, samples int) map[string]map[string][]float64 {
