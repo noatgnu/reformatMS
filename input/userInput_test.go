@@ -1,10 +1,14 @@
 package input
 
-import "testing"
+import (
+	"testing"
+	"path/filepath"
+)
 
 func TestClean(t *testing.T) {
 	result := Clean(`/ ""`)
-	if result != `\` {
+	f, _ := filepath.Abs(`\`)
+	if result != f {
 		t.Errorf(`Expected "\" got %v`, result)
 	}
 }

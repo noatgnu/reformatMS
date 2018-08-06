@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"log"
 )
 
 func Input(message string) (filename string, err error) {
@@ -21,5 +22,9 @@ func Input(message string) (filename string, err error) {
 }
 
 func Clean(message string) string {
-	return strings.TrimSuffix(filepath.FromSlash(strings.Replace(message, `"`, "", -1)), " ")
+	f, err := filepath.Abs(strings.TrimSuffix(filepath.FromSlash(strings.Replace(message, `"`, "", -1)), " "))
+	if err != nil {
+		log.Fatalln(err)
+	}
+	return f
 }
