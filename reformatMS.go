@@ -54,11 +54,13 @@ func TakeUserInput() (string, string, string) {
 	var err error
 	openSWATHfile, err = userInput(openSWATHfile, *swath, "What SWATH-MS file are you opening (written like: SWATH.csv): ", err)
 	openSWATHfile = input.Clean(openSWATHfile)
+	log.Printf("Input Ion file: %s", openSWATHfile)
 	openFDRfile, err = userInput(openFDRfile, *fdr, "What FDR file are you opening (written like: FDR.csv): ", err)
 	openFDRfile = input.Clean(openFDRfile)
+	log.Printf("Input FDR file: %s", openFDRfile)
 	filename, err = userInput(filename, *out, "What are your output file (written like: output.csv): ", err)
 	filename = input.Clean(filename)
-	log.Printf("Input:\n- SWATH File: %s\n- FDR File: %s\n- Output File: %s ", openSWATHfile, openFDRfile, filename)
+	log.Printf("Input Output file: %s", filename)
 	return openSWATHfile, openFDRfile, filename
 }
 
