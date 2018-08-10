@@ -16,6 +16,7 @@ var swath = flag.String("ion", "", "SWATH Ion File")
 var fdr = flag.String("fdr", "", "FDR File")
 var out = flag.String("out", "", "Output File")
 var threshold = flag.Float64("t", 0.01, "FDR Cutoff threshold")
+var ignoreBlank = flag.Bool("i", true, "Ignore row that has no values passing FDR threshold across all comparing samples")
 
 func init() {
 	flag.Parse()
@@ -39,7 +40,7 @@ func main() {
 	writer := bufio.NewWriter(o)
 	writer.WriteString("ProteinName,PeptideSequence,PrecursorCharge,FragmentIon,ProductCharge,IsotopeLabelType,Condition,BioReplicate,Run,Intensity\n")
 	outputChan := make(chan string)
-	go ProcessIons(outputChan, swathFile, fdrMap, samples)
+	go ProcessIons(outputChan, swathFile, fdrMap, samples, *ignoreBlank)
 	for r := range outputChan {
 		writer.WriteString(r)
 	}
@@ -64,7 +65,7 @@ func TakeUserInput() (string, string, string) {
 	return openSWATHfile, openFDRfile, filename
 }
 
-func ProcessIons(outputChan chan string, swathFile fileHandler.FileObject, fdrMap map[string]map[string][]float64, samples int) {
+func ProcessIons(outputChan chan string, swathFile fileHandler.FileObject, fdrMap map[string]map[string][]float64, samples int, ignoreBlank bool) {
 
 	//log.Println(fdrMap)
 	swathSampleMap := make(map[string][]string)
@@ -101,9 +102,13 @@ func ProcessIons(outputChan chan string, swathFile fileHandler.FileObject, fdrMa
 					temp += row
 
 				}
-				if count < samples {
-					outputChan <- temp
 
+				if !ignoreBlank {
+					outputChan <- temp
+				} else {
+					if count < samples {
+						outputChan <- temp
+					}
 				}
 			}
 		}
