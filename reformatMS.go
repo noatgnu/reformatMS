@@ -77,8 +77,8 @@ func ProcessIons(outputChan chan string, swathFile fileHandler.FileObject, fdrMa
 				for i := 0; i < samples; i++ {
 					//log.Println(swathFile.Header[9+i])
 					var sample []string
-					if val, ok := swathSampleMap[swathFile.Header[9+i]]; ok {
-						sample = val
+					if val1, ok := swathSampleMap[swathFile.Header[9+i]]; ok {
+						sample = val1
 					} else {
 						sample = strings.Split(swathFile.Header[9+i], "_")
 						swathSampleMap[swathFile.Header[9+i]] = sample[:]
