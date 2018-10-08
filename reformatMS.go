@@ -1,15 +1,15 @@
 package main
 
 import (
+	"bufio"
 	"flag"
+	"fmt"
 	"github.com/noatgnu/reformatMS/fileHandler"
 	"github.com/noatgnu/reformatMS/input"
 	"log"
 	"os"
 	"strconv"
 	"strings"
-	"bufio"
-	"fmt"
 )
 
 var swath = flag.String("ion", "", "SWATH Ion File")
