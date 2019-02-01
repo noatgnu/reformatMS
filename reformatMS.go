@@ -17,6 +17,11 @@ var fdr = flag.String("fdr", "", "FDR File")
 var out = flag.String("out", "", "Output File")
 var threshold = flag.Float64("t", 0.01, "FDR Cutoff threshold")
 var ignoreBlank = flag.Bool("i", true, "Ignore row that has no values passing FDR threshold across all comparing samples")
+var decoy = flag.Bool("d", false, "true if filter also include decoy FDR, false if not.")
+type FDR struct {
+	p map[string]map[string][]float64
+	decoy map[string]map[string][]float64
+}
 
 func init() {
 	flag.Parse()
@@ -76,7 +81,7 @@ func TakeUserInput() (string, string, string) {
 	return openSWATHfile, openFDRfile, filename
 }
 
-func ProcessIons(outputChan chan string, swathFile fileHandler.FileObject, fdrMap map[string]map[string][]float64, samples int, ignoreBlank bool) {
+func ProcessIons(outputChan chan string, swathFile fileHandler.FileObject, fdrMap FDR, samples int, ignoreBlank bool) {
 
 	//log.Println(fdrMap)
 	swathSampleMap := make(map[string][]string)
@@ -84,8 +89,21 @@ func ProcessIons(outputChan chan string, swathFile fileHandler.FileObject, fdrMa
 	for c := range swathFile.OutputChan {
 		count := 0
 		temp := ""
-		if v, ok := fdrMap[c[0]]; ok {
+		if v, ok := fdrMap.p[c[0]]; ok {
 			if val, ok := v[c[1]]; ok {
+				hasDecoy := false
+
+				if *decoy {
+					if _, ok := fdrMap.decoy[c[0]]; ok {
+
+						if _, ok := fdrMap.decoy[c[0]][c[1]]; ok {
+
+							hasDecoy = true
+						} else {
+
+						}
+					}
+				}
 				for i := 0; i < samples; i++ {
 					//log.Println(swathFile.Header[9+i])
 					var sample []string
@@ -100,61 +118,104 @@ func ProcessIons(outputChan chan string, swathFile fileHandler.FileObject, fdrMa
 						sample[0],
 						swathFile.Header[9+i],
 						strconv.Itoa(i+1))
+
 					if val[i] < *threshold {
-						row += c[9+i]
-						if c[9+i] == "" {
-							count += 1
+						if hasDecoy {
+							if fdrMap.decoy[c[0]][c[1]][i] >= *threshold {
+								row += c[9+i]
+								if c[9+i] == "" {
+									count += 1
+								}
+							}
+						} else {
+							if !*decoy {
+								row += c[9+i]
+								if c[9+i] == "" {
+									count += 1
+								}
+							}
 						}
 					} else {
 						row += ""
 						count += 1
 					}
+
 					row += "\n"
 					temp += row
-
 				}
-
 				if !ignoreBlank {
+
 					outputChan <- temp
 				} else {
 					if count < samples {
 						outputChan <- temp
 					}
 				}
+
 			}
+
+
 		}
 
 	}
 	close(outputChan)
 }
 
-func ExtractFDRMap(fdrFile fileHandler.FileObject, samples int) map[string]map[string][]float64 {
+func ExtractFDRMap(fdrFile fileHandler.FileObject, samples int) FDR {
 	fdrMap := make(map[string]map[string][]float64)
+	fdrMapDecoy := make(map[string]map[string][]float64)
 	log.Println("Mapping FDR to accession ID.")
+	lastPeptide := ""
 	for c := range fdrFile.OutputChan {
 		fdrFail := 0
-		if _, ok := fdrMap[c[0]]; !ok {
-			fdrMap[c[0]] = make(map[string][]float64)
-		}
 
 		var fdrArray []float64
-		for i := 0; i < samples; i++ {
-			val, err := strconv.ParseFloat(c[7+i], 64)
-			if err != nil {
-				log.Fatalln(err)
-			}
 
-			if val >= *threshold {
-				fdrFail++
+		switch c[6] {
+		case "FALSE":
+			if _, ok := fdrMap[c[0]]; !ok {
+				fdrMap[c[0]] = make(map[string][]float64)
 			}
-			fdrArray = append(fdrArray, val)
-		}
-		if fdrFail < samples {
+			for i := 0; i < samples; i++ {
+				val, err := strconv.ParseFloat(c[7+i], 64)
+				if err != nil {
+					log.Fatalln(err)
+				}
 
-			fdrMap[c[0]][c[1]] = fdrArray
+				if val >= *threshold {
+					fdrFail++
+				}
+				fdrArray = append(fdrArray, val)
+			}
+			if fdrFail < samples {
+				fdrMap[c[0]][c[1]] = fdrArray
+			}
+			lastPeptide = c[1]
+		case "TRUE":
+			if *decoy {
+				if _, ok := fdrMapDecoy[c[0]]; !ok {
+					fdrMapDecoy[c[0]] = make(map[string][]float64)
+				}
+
+				for i := 0; i < samples; i++ {
+					val, err := strconv.ParseFloat(c[7+i], 64)
+					if err != nil {
+						log.Fatalln(err)
+					}
+
+					if val < *threshold {
+						fdrFail++
+					}
+					fdrArray = append(fdrArray, val)
+				}
+				if fdrFail < samples {
+					fdrMapDecoy[c[0]][lastPeptide] = fdrArray
+				}
+			}
 		}
 	}
-	return fdrMap
+
+	return FDR{fdrMap, fdrMapDecoy}
 }
 
 func userInput(openSWATHfile string, arg string, message string, err error) (string, error) {
