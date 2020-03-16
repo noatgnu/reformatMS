@@ -43,7 +43,7 @@ func main() {
 	}
 
 	writer := bufio.NewWriter(o)
-	_, err = writer.WriteString("ProteinName,PeptideSequence,PrecursorCharge,FragmentIon,ProductCharge,IsotopeLabelType,Condition,BioReplicate,Run,Intensity\n")
+	_, err = writer.WriteString("ProteinName\tPeptideSequence\tPrecursorCharge\tFragmentIon\tProductCharge\tIsotopeLabelType\tCondition\tBioReplicate\tRun\tIntensity\n")
 	if err != nil {
 		log.Panic(err)
 	}
@@ -75,7 +75,7 @@ func TakeUserInput() (string, string, string) {
 	openFDRfile, err = userInput(openFDRfile, *fdr, "What FDR file are you opening (written like: FDR.csv): ", err)
 	openFDRfile = input.Clean(openFDRfile)
 	log.Printf("Input FDR file: %s", openFDRfile)
-	filename, err = userInput(filename, *out, "What are your output file (written like: output.csv): ", err)
+	filename, err = userInput(filename, *out, "What are your output file (written like: output.txt): ", err)
 	filename = input.Clean(filename)
 	log.Printf("Input Output file: %s", filename)
 	return openSWATHfile, openFDRfile, filename
@@ -114,7 +114,7 @@ func ProcessIons(outputChan chan string, swathFile fileHandler.FileObject, fdrMa
 						swathSampleMap[swathFile.Header[9+i]] = sample[:]
 					}
 
-					row := fmt.Sprintf("%v,%v,%v,%v,%v,%v,%v,%v,%v,", c[0], c[1], c[3], c[7]+c[8], c[6], "L",
+					row := fmt.Sprintf("%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t%v\t", c[0], c[1], c[3], c[7]+c[8], c[6], "L",
 						sample[0],
 						swathFile.Header[9+i],
 						strconv.Itoa(i+1))
